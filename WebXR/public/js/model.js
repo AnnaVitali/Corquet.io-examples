@@ -23,6 +23,9 @@ class RootModel extends Croquet.Model {
         this.addHologramChild(HologramModel.create({ position: new BABYLON.Vector3(0, 1.3, 1) }));
 
         this.GUIManager = new BABYLON.GUI.GUI3DManager(scene);
+        this.GUIManager.useRealisticScaling = true;
+
+        this.#setupNearMenu();
 
         this.#activateRenderLoop();
 
@@ -32,7 +35,7 @@ class RootModel extends Croquet.Model {
         this.hologramChildren.push(hologramChild);
     }
 
-    /*
+    
     #setupNearMenu() {
         const buttonParams = [
             { name: "Blue", color: BABYLON.Color3.Blue() },
@@ -51,10 +54,7 @@ class RootModel extends Croquet.Model {
             buttonParams: buttonParams
         });
     }
-    */
-    #setupScene() {
-        
-    }
+    
 
     async #createWebXRExperience() {
         const supported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync('immersive-ar')
@@ -93,15 +93,14 @@ class RootModel extends Croquet.Model {
 
 }
 
-/*
+
 class NearMenuModel extends Croquet.Model {
     init(options = {}) {
         this.nearMenu = new BABYLON.GUI.NearMenu("NearMenu");
+        options.GUIManager.addControl(this.nearMenu);
         this.nearMenu.rows = options.rows;
         this.nearMenu.isPinned = options.isPinned;
         this.nearMenu.position = options.position;
-
-        options.GUIManager.addControl(nearMenu);
 
         this.#setupButtons(options.buttonParams);
 
@@ -110,16 +109,16 @@ class NearMenuModel extends Croquet.Model {
 
     #setupButtons(buttonParams) {
         buttonParams.forEach(button => {
-            input = new BABYLON.GUI.TouchHolographicButton();
+            const input = new BABYLON.GUI.TouchHolographicButton();
             input.text = button.name;
            /* input.onPointerDownObservable.add(() => //todo
                 );
-            });
+            });*/
             this.nearMenu.addButton(input);
         });
     }
 }
-*/
+
 
 class HologramModel extends Croquet.Model {
     init(options = {}) {
@@ -143,7 +142,7 @@ class HologramModel extends Croquet.Model {
 
 RootModel.register("RootModel");
 HologramModel.register("HologramModel");
-//NearMenuModel.register("NearMenuModel");
+NearMenuModel.register("NearMenuModel");
 
 
 export { RootModel, HologramModel };
