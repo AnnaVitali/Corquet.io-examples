@@ -20,41 +20,47 @@ class RootModel extends Croquet.Model {
         light.intensity = 1;
 
         this.hologramChildren = [];
-        this.addHologramChild(HologramModel.create({ position: new BABYLON.Vector3(0, 1.3, 1) }));
+
+        this.#addElementToScene();
+
+        this.subscribe("view", "readyToRender", this.activateRenderLoop);
+
+    }
+
+    addHologramChild() {
+        this.hologramChildren.push(HologramModel.create({ position: new BABYLON.Vector3(0, 1.3, 1) }));
+    }
+
+    activateRenderLoop() {
+        this.#createWebXRExperience().then(sceneToRender => {
+            engine.runRenderLoop(() => sceneToRender.render());
+        });
+    }
+
+    #addElementToScene() {
+        this.addHologramChild();
 
         this.GUIManager = new BABYLON.GUI.GUI3DManager(scene);
         this.GUIManager.useRealisticScaling = true;
 
         this.#setupNearMenu();
-
-        this.#activateRenderLoop();
-
-    }
-
-    addHologramChild(hologramChild) {
-        this.hologramChildren.push(hologramChild);
     }
 
     
     #setupNearMenu() {
-        const buttonParams = [
-            { name: "Blue", color: BABYLON.Color3.Blue() },
-            { name: "Red", color: BABYLON.Color3.Red() },
-            { name: "Green", color: BABYLON.Color3.Green() },
-            { name: "Purple", color: BABYLON.Color3.Purple() },
-            { name: "Yellow", color: BABYLON.Color3.Yellow() },
-            { name: "Teal", color: BABYLON.Color3.Teal() },
-        ]
+ 
+        console.log("MODEL publish: nearMenu created");
+        this.publish("nearMenu", "created");
 
         this.nearMenuModel = NearMenuModel.create({
+            holograms: this.hologramChildren,
             rows: 3,
             GUIManager: this.GUIManager,
             isPinned: true,
-            position: new BABYLON.Vector3(-0.2, 1.3, 1),
-            buttonParams: buttonParams
+            //position: new BABYLON.Vector3(0, 0, -1)
+            position: new BABYLON.Vector3(-0.2, 1.3, 1)
         });
     }
-    
 
     async #createWebXRExperience() {
         const supported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync('immersive-ar')
@@ -83,48 +89,84 @@ class RootModel extends Croquet.Model {
         }
 
         return scene;
-    }
-
-    #activateRenderLoop() {
-        this.#createWebXRExperience().then(sceneToRender => {
-            engine.runRenderLoop(() => sceneToRender.render());
-        });
-    }
+    } 
 
 }
 
 
 class NearMenuModel extends Croquet.Model {
     init(options = {}) {
+        this.holograms = options.holograms;
         this.nearMenu = new BABYLON.GUI.NearMenu("NearMenu");
+        this.buttons = []
         options.GUIManager.addControl(this.nearMenu);
         this.nearMenu.rows = options.rows;
         this.nearMenu.isPinned = options.isPinned;
         this.nearMenu.position = options.position;
 
-        this.#setupButtons(options.buttonParams);
+        console.log()
 
-        this.publish("nearMenu", "created");
+        this.subscribe("view", "addColorButtons", this.addColorButton);
+        this.publish("random", "test");
+
     }
 
-    #setupButtons(buttonParams) {
-        buttonParams.forEach(button => {
-            const input = new BABYLON.GUI.TouchHolographicButton();
-            input.text = button.name;
-           /* input.onPointerDownObservable.add(() => //todo
-                );
-            });*/
-            this.nearMenu.addButton(input);
+    addColorButton(buttons) {
+        buttons.buttonParams.forEach((properties) => {
+            const button = new BABYLON.GUI.TouchHolographicButton();
+            const color = this.#computeBabylonColor(properties.color);
+
+            button.text = properties.name;
+            button.onPointerDownObservable.add(() => {
+                this.holograms.forEach((hologramModel) => {
+                    hologramModel.changeMaterialColor(color);
+                });
+            });
+
+            this.buttons.push(button);
+            this.nearMenu.addButton(button);
         });
     }
+
+    publishEventButtonClicked(colorName) {
+        this.publish("button" + colorName, "clicked", colorName);
+    }
+
+    #computeBabylonColor(colorName) {
+        switch (colorName) {
+            case "Blue":
+               return BABYLON.Color3.Blue();
+                break;
+            case "Red":
+                return BABYLON.Color3.Red();
+                break;
+            case "Green":
+                return BABYLON.Color3.Green();
+                break;
+            case "Purple":
+                return BABYLON.Color3.Purple();
+                break;
+            case "Yellow":
+                return BABYLON.Color3.Yellow();
+                break;
+            case "Teal":
+                return BABYLON.Color3.Teal();
+                break;
+            default:
+                return BABYLON.Color3.White();
+        }
+    }
+
 }
 
 
 class HologramModel extends Croquet.Model {
     init(options = {}) {
         this.hologram = this.#createNewHologram(options.position);
+    }
 
-
+    changeMaterialColor(color) {
+        this.hologram.material.diffuseColor = color;
     }
 
     #createNewHologram(position, scene) {
@@ -135,7 +177,7 @@ class HologramModel extends Croquet.Model {
         material.diffuseColor = BABYLON.Color3.Random();
 
         sphere.material = material;
-        this.publish("hologram", "created");
+  
         return sphere;
     }
 }
@@ -145,4 +187,4 @@ HologramModel.register("HologramModel");
 NearMenuModel.register("NearMenuModel");
 
 
-export { RootModel, HologramModel };
+export { RootModel};

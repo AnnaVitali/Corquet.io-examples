@@ -4,18 +4,22 @@ class RootView extends Croquet.View {
         super(model);
         this.model = model;
 
-        this.subscribe("hologram", "created", this.#attachHologramChild);
-        this.subscribe("nearMenu", "created", this.#attachNearMenu);
+       this.attachHologramChild;
+       this.attachNearMenu;
 
+        this.publish("view", "readyToRender");
+        console.log("VIEW publish: ready to render");
     }
 
-    #attachHologramChild() {
-        new HologramView(model.hologramChildren[model.hologramChildren.length - 1]);
+    attachHologramChild() {
+        console.log("VIEW received: hologram created")
+        new HologramView(this.model.hologramChildren[this.model.hologramChildren.length - 1]);
     }
 
     
-    #attachNearMenu() {
-        new NearMenuView(model.nearMenuModel);
+    attachNearMenu() {
+        console.log("VIEW received: nearMenu created");
+        new NearMenuView(this.model.nearMenuModel);
     }
 
    
@@ -33,7 +37,43 @@ class NearMenuView extends Croquet.View {
 
     constructor(model) {
         super(model);
+        this.#startPopulatingNearMenu();
+        console.log("NEARMENUVIEW created");
     }
+
+    #startPopulatingNearMenu() {
+
+        const buttonParams = [
+            {
+                name: "Blue",
+                color: "Blue"
+            },
+            {
+                name: "Red",
+                color: "Red"
+            },
+            {
+                name: "Green",
+                color: "Green"
+            },
+            {
+                name: "Purple",
+                color: "Purple"
+            },
+            {
+                name: "Yellow",
+                color: "Yellow"
+            },
+            {
+                name: "Teal",
+                color: "Teal"
+            },
+        ]
+
+        this.publish("view", "addColorButtons", { buttonParams });
+
+    }
+
 }
 
 export { RootView };
