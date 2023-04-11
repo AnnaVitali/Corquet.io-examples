@@ -25,10 +25,8 @@ class RootView extends Croquet.View {
 
         this.GUIManager = new BABYLON.GUI.GUI3DManager(this.model.scene);
 
-
         this.#addHolographicElement();
         this.#addNearMenu();
-
     }
 
     notifyButtonClicked(name){

@@ -4,6 +4,7 @@ class RootModel extends Croquet.Model {
         this.canvas = document.getElementById("renderCanvas");
         this.engine = new BABYLON.Engine(this.canvas, true);
         this.scene = new BABYLON.Scene(this.engine);
+        this.doesHologramChangedColor = false;
 
         this.hologramChildren = [];
 
@@ -14,6 +15,9 @@ class RootModel extends Croquet.Model {
 
     colorButtonClicked(data){
         console.log("MODEL received: color button clicked " + data.name);
+        if(this.doesHologramChangedColor === false){
+            this.doesHologramChangedColor === true;
+        }
         const color = this.#computeColor(data.name);
         this.hologramChildren.forEach(hologram => hologram.material.diffuseColor = color);
     }
@@ -23,7 +27,7 @@ class RootModel extends Croquet.Model {
          console.log(this.scene.meshes.map(m => m.name));
          console.log(this.hologramChildren);
          const hologram = this.scene.meshes.find(m => m.name === data.name);
-         if (!(typeof hologram === "undefined")) {
+         if (!(typeof hologram === "undefined") && !this.hologramChildren.map(h => h.name).includes(data.name)) {
              this.hologramChildren.push(hologram);
          }
     }
