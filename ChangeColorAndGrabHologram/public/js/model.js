@@ -12,10 +12,16 @@ class RootModel extends Croquet.Model {
         this.subscribe("colorButton", "clicked", this.colorButtonClicked);
         this.subscribe("hologram", "positionChanged", this.updateHologramPosition);
         this.subscribe("view", "takeControl", this.notifyControlRequired);
-        console.log("MODEL initialized");
+        this.subscribe("view", "controlReleased", this.notifyControlReleased);
+    }
+
+    notifyControlReleased(data){
+        console.log("MODEL received: view control released")
+        this.publish("view", "resetControl", data);
     }
 
     notifyControlRequired(data){
+        console.log("MODEL received: view require control")
         this.publish("view", "manageControl", data);
     }
 
@@ -24,13 +30,15 @@ class RootModel extends Croquet.Model {
         const hologram = this.scene.meshes.find(m => m.name === data.name);
         if (!(typeof hologram === "undefined")) {
             const position =  new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
-            const rotation =  new BABYLON.Vector3(data.rotation_x, data.rotation_y, data.rotation_z);
+            const rotation =  new BABYLON.Quaternion(data.rotation_x, data.rotation_y, data.rotation_z, data.rotation_w);
             if(hologram.absolutePosition !== position) {
                 hologram.position = new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
-            }else if (hologram.rotation !== rotation) {
-                hologram.rotation = new BABYLON.Vector3(data.rotation_x, data.rotation_y, data.rotation_z, data.rotation_w);
+            }else if (hologram.absoluteRotationQuaternion !== rotation) {
+                hologram.rotation = rotation;
             }
         }
+
+
     }
 
     colorButtonClicked(data){

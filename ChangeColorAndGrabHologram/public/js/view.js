@@ -6,10 +6,21 @@ class RootView extends Croquet.View {
         this.model = model;
 
         this.subscribe("view", "manageControl", this.manageHologramControl);
+        this.subscribe("view", "resetControl", this.manageHologramControlReleased);
         console.log("VIEW " + this.id);
 
         this.#initializeScene();
         this.#activateRenderLoop();
+    }
+
+    manageHologramControlReleased(data){
+        console.log("VIEW received: reset control");
+        if(data.id !== this.id){
+            this.#addManipulateHologramNearMenu();
+        }else{
+            this.gizmo.attachedMesh = null;
+            this.#setupDefaultControlButtonBehavior();
+        }
     }
 
     manageHologramControl(data){
@@ -36,7 +47,8 @@ class RootView extends Croquet.View {
                 position_z: hologramPosition.z,
                 rotation_x: hologramRotation.x,
                 rotation_y: hologramRotation.y,
-                rotation_z: hologramRotation.z
+                rotation_z: hologramRotation.z,
+                rotation_w: hologramRotation.w
             });
     }
 
@@ -45,10 +57,16 @@ class RootView extends Croquet.View {
         this.publish("view", "takeControl", {id: this.id});
     }
 
+    notifyCurrentUserReleaseControl(){
+        console.log("VIEW publish: view control released");
+        this.publish("view", "controlReleased", {id: this.id});
+    }
+
     #addHolographicElement() {
         this.hologramName = "sphere"
         const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 0.2, segments: 32}, this.model.scene);
         sphere.position =  new BABYLON.Vector3(0, 1.3, 1);
+        sphere.computeWorldMatrix(true);
 
         const material = new BABYLON.StandardMaterial("material", this.model.scene);
         material.diffuseColor = BABYLON.Color3.White();
@@ -84,25 +102,32 @@ class RootView extends Croquet.View {
         //create bounding box and object controls
         const hologram = this.model.hologramChildren.find(h => h.name === this.hologramName);
         const boundingBox = BABYLON.BoundingBoxGizmo.MakeNotPickableAndWrapInBoundingBox(hologram);
-        var utilLayer = new BABYLON.UtilityLayerRenderer(this.model.scene);
+        const utilLayer = new BABYLON.UtilityLayerRenderer(this.model.scene);
         utilLayer.utilityLayerScene.autoClearDepthAndStencil = false;
-        const gizmo = new BABYLON.BoundingBoxGizmo(BABYLON.Color3.FromHexString("#0984e3"), utilLayer)
-        gizmo.rotationSphereSize = 0.03;
-        gizmo.scaleBoxSize = 0.03;
-        gizmo.attachedMesh = boundingBox;
+        this.gizmo = new BABYLON.BoundingBoxGizmo(BABYLON.Color3.FromHexString("#0984e3"), utilLayer)
+        this.gizmo.rotationSphereSize = 0.03;
+        this.gizmo.scaleBoxSize = 0.03;
+        this.gizmo.attachedMesh = boundingBox;
 
         // Create behaviors to drag and scale with pointers in VR
-        var sixDofDragBehavior = new BABYLON.SixDofDragBehavior();
+        const sixDofDragBehavior = new BABYLON.SixDofDragBehavior();
+        sixDofDragBehavior.dragDeltaRatio = 1;
+        sixDofDragBehavior.zDragFactor = 1;
 
         sixDofDragBehavior.onPositionChangedObservable.add(() => {
-            this.notifyHologramPositionChanged(hologram.name, hologram.absolutePosition, hologram.rotation);
+            this.notifyHologramPositionChanged(hologram.name, hologram.absolutePosition, hologram.absoluteRotationQuaternion);
         });
         boundingBox.addBehavior(sixDofDragBehavior);
 
         var multiPointerScaleBehavior = new BABYLON.MultiPointerScaleBehavior();
         boundingBox.addBehavior(multiPointerScaleBehavior);
-    }
 
+        this.controlButton.text = "Stop manipulating";
+        this.controlButton.onPointerDownObservable.clear();
+        this.controlButton.onPointerDownObservable.add(() => {
+            this.notifyCurrentUserReleaseControl();
+        });
+    }
 
     #addChangeColorNearMenu(){
         this.GUIManager.useRealisticScaling = true;
@@ -147,14 +172,18 @@ class RootView extends Croquet.View {
         this.manipulatorNearMenu.position = new BABYLON.Vector3(+0.2, 1.3, 1);
 
         this.controlButton = new BABYLON.GUI.TouchHolographicButton();
-        this.controlButton.text = "Take Control";
+        this.#setupDefaultControlButtonBehavior()
+        this.manipulatorNearMenu.addButton(this.controlButton);
+
+    }
+
+    #setupDefaultControlButtonBehavior() {
+        this.controlButton.text = "Start manipulating";
         this.controlButton.imageUrl = "../img/iconAdjust.png"
+        this.controlButton.onPointerDownObservable.clear();
         this.controlButton.onPointerDownObservable.add(() => {
             this.notifyCurrentUserInControl();
         });
-
-        this.manipulatorNearMenu.addButton(this.controlButton);
-
     }
 
     async #createWebXRExperience() {
