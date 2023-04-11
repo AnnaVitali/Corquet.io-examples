@@ -1,6 +1,7 @@
 class MyView extends Croquet.View {
 
     constructor(model) {
+        console.log("VIEW: created");
         super(model);
         this.model = model;
         countDisplay.onclick = event => this.counterReset();
@@ -13,6 +14,7 @@ class MyView extends Croquet.View {
     }
 
     counterChanged() {
+        console.log("VIEW: received message");
         countDisplay.textContent = this.model.count;
     }
 

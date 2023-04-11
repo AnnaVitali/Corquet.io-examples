@@ -105,3 +105,9 @@ dist
 
 #Visual Studio
 *.vs/*
+
+#Jet Brains
+*.idea/*
+
+#https certificate
+*.pem
