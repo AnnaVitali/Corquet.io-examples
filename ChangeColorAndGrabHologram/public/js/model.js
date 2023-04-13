@@ -1,3 +1,5 @@
+import { ManipulatorModel } from "./manipulator_model.js";
+
 const canvas = document.getElementById("renderCanvas");
 class RootModel extends Croquet.Model {
 
@@ -10,35 +12,7 @@ class RootModel extends Croquet.Model {
 
         this.subscribe("hologram", "created", this.addHologram);
         this.subscribe("colorButton", "clicked", this.colorButtonClicked);
-        this.subscribe("hologram", "positionChanged", this.updateHologramPosition);
-        this.subscribe("view", "takeControl", this.notifyControlRequired);
-        this.subscribe("view", "controlReleased", this.notifyControlReleased);
-    }
-
-    notifyControlReleased(data){
-        console.log("MODEL received: view control released")
-        this.publish("view", "resetControl", data);
-    }
-
-    notifyControlRequired(data){
-        console.log("MODEL received: view require control")
-        this.publish("view", "manageControl", data);
-    }
-
-    updateHologramPosition(data){
-        console.log("MODEL received: hologram position changed " + data.position_x + " " + data.position_y + " " + data.position_z + " ");
-        const hologram = this.scene.meshes.find(m => m.name === data.name);
-        if (!(typeof hologram === "undefined")) {
-            const position =  new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
-            const rotation =  new BABYLON.Quaternion(data.rotation_x, data.rotation_y, data.rotation_z, data.rotation_w);
-            if(hologram.absolutePosition !== position) {
-                hologram.position = new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
-            }else if (hologram.absoluteRotationQuaternion !== rotation) {
-                hologram.rotation = rotation;
-            }
-        }
-
-
+        console.log("model created");
     }
 
     colorButtonClicked(data){
@@ -46,40 +20,32 @@ class RootModel extends Croquet.Model {
         if(this.doesHologramChangedColor === false){
             this.doesHologramChangedColor === true;
         }
-        const color = this.#computeColor(data.name);
-        this.hologramChildren.forEach(hologram => hologram.material.diffuseColor = color);
+
+        this.hologramChildren.forEach(manipulator => manipulator.changeHologramColor(this.#computeColor(data.name)));
     }
 
     addHologram(data){
-         console.log("MODEL received: hologram created " + data.name);
-         console.log(this.scene.meshes.map(m => m.name));
-         console.log(this.hologramChildren);
          const hologram = this.scene.meshes.find(m => m.name === data.name);
          if (!(typeof hologram === "undefined") && !this.hologramChildren.map(h => h.name).includes(data.name)) {
-             this.hologramChildren.push(hologram);
+             this.hologramChildren.push( ManipulatorModel.create({hologram: hologram, scene: this.scene}));
          }
+        this.publish("model", "hologramAdded");
     }
 
     #computeColor(colorName){
         switch (colorName) {
             case "Blue":
                 return BABYLON.Color3.Blue();
-                break;
             case "Red":
                 return BABYLON.Color3.Red();
-                break;
             case "Green":
                 return BABYLON.Color3.Green();
-                break;
             case "Purple":
                 return BABYLON.Color3.Purple();
-                break;
             case "Yellow":
                 return BABYLON.Color3.Yellow();
-                break;
             case "Teal":
                 return BABYLON.Color3.Teal();
-                break;
             default:
                 return BABYLON.Color3.White();
         }
