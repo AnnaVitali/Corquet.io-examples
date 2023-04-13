@@ -14,7 +14,7 @@ class RootView extends Croquet.View {
 
     addManipulatorView(){
         const manipulatorModel = this.model.hologramChildren[this.model.hologramChildren.length - 1];
-        new ManipulatorView(manipulatorModel, manipulatorModel.hologram, this.GUIManager);
+        this.manipulatorView = new ManipulatorView(manipulatorModel, manipulatorModel.hologram, this.GUIManager);
     }
 
     notifyButtonClicked(name){

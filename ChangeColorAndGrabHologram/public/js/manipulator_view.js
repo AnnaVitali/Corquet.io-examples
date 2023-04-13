@@ -6,49 +6,58 @@ class ManipulatorView extends Croquet.View {
         this.model = model;
         this.hologram = hologram;
         this.GUIManager = GUIManager;
-
+        this.nearMenuIsPresent = false;
 
         this.subscribe("view", "manageControl", this.manageHologramControl);
         this.subscribe("view", "resetControl", this.manageHologramControlReleased);
-        this.subscribe("view", "resetControl", this.manageHologramControlReleased);
         this.subscribe("hologram", "updatePosition", this.updateHologramPosition);
 
-        this.#addManipulateHologramNearMenu();
+        this.setupSession()
+    }
 
+    setupSession(){
+        if(this.model.controlTaken){
+            this.#changePositionAndRotation(this.model.hologramPosition, this.model.hologramRotation);
+        }else{
+            this.#addManipulateHologramNearMenu();
+        }
     }
 
     updateHologramPosition(data){
         if(data.view !== this.id) {
-            console.log("VIEW received: hologram position changed " + data.position_x + " " + data.position_y + " " + data.position_z + " ");
+            console.log("VIEW "+ this.id + " received: hologram position changed " + data.position_x + " " + data.position_y + " " + data.position_z + " ");
             const position = new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
             const rotation = new BABYLON.Quaternion(data.rotation_x, data.rotation_y, data.rotation_z, data.rotation_w);
 
-            this.hologram.position = position;
-            this.hologram.rotation = rotation;
+           this.#changePositionAndRotation(position, rotation);
         }
     }
 
     manageHologramControlReleased(data){
-        console.log("VIEW received: reset control");
-        if(data.id !== this.id){
-            this.#addManipulateHologramNearMenu();
-        }else{
+        console.log("VIEW "+ this.id + " received: reset control");
+        if(data.id === this.id){
+            this.hologram.setParent(null);
+            this.boundingBox.dispose();
             this.gizmo.attachedMesh = null;
+            this.gizmo.dispose();
             this.#setupDefaultControlButtonBehavior();
+        }else if(!this.nearMenuIsPresent){
+            this.#addManipulateHologramNearMenu();
         }
     }
 
     manageHologramControl(data){
-        console.log("VIEW received: user in control");
+        console.log("VIEW "+ this.id + " received: manage hologram control");
         if(data.id !== this.id){
             this.manipulatorNearMenu.dispose();
+            this.nearMenuIsPresent = false;
         }else{
             this.#addHologramManipulator();
         }
     }
 
     notifyHologramPositionChanged(hologramName, hologramPosition, hologramRotation){
-        console.log("VIEW publish: hologram position changed");
+        console.log("VIEW "+ this.id + " publish:  hologram position changed");
         this.publish("hologram", "positionChanged",
             {
                 view: this.id,
@@ -64,25 +73,29 @@ class ManipulatorView extends Croquet.View {
     }
 
     notifyCurrentUserInControl(){
-        console.log("VIEW publish: view take control");
+        console.log("VIEW "+ this.id + " publish: view take control");
         this.publish("view", "takeControl", {id: this.id});
     }
 
     notifyCurrentUserReleaseControl(){
-        console.log("VIEW publish: view control released");
+        console.log("VIEW "+ this.id + " publish: view control released");
         this.publish("view", "controlReleased", {id: this.id});
+    }
+
+    #changePositionAndRotation(position, rotation){
+        this.hologram.position = position;
+        this.hologram.rotation = rotation;
     }
 
     #addHologramManipulator(){
         //create bounding box and object controls
-        const hologram = this.model.hologram;
-        const boundingBox = BABYLON.BoundingBoxGizmo.MakeNotPickableAndWrapInBoundingBox(hologram);
+        this.boundingBox = BABYLON.BoundingBoxGizmo.MakeNotPickableAndWrapInBoundingBox(this.hologram);
         const utilLayer = new BABYLON.UtilityLayerRenderer(this.model.scene);
         utilLayer.utilityLayerScene.autoClearDepthAndStencil = false;
         this.gizmo = new BABYLON.BoundingBoxGizmo(BABYLON.Color3.FromHexString("#0984e3"), utilLayer)
         this.gizmo.rotationSphereSize = 0.03;
         this.gizmo.scaleBoxSize = 0.03;
-        this.gizmo.attachedMesh = boundingBox;
+        this.gizmo.attachedMesh = this.boundingBox;
 
         // Create behaviors to drag and scale with pointers in VR
         const sixDofDragBehavior = new BABYLON.SixDofDragBehavior();
@@ -90,12 +103,12 @@ class ManipulatorView extends Croquet.View {
         sixDofDragBehavior.zDragFactor = 1;
 
         sixDofDragBehavior.onPositionChangedObservable.add(() => {
-            this.notifyHologramPositionChanged(hologram.name, hologram.absolutePosition, hologram.absoluteRotationQuaternion);
+            this.notifyHologramPositionChanged(this.hologram.name, this.hologram.absolutePosition, this.hologram.absoluteRotationQuaternion);
         });
-        boundingBox.addBehavior(sixDofDragBehavior);
+        this.boundingBox.addBehavior(sixDofDragBehavior);
 
         var multiPointerScaleBehavior = new BABYLON.MultiPointerScaleBehavior();
-        boundingBox.addBehavior(multiPointerScaleBehavior);
+        this.boundingBox.addBehavior(multiPointerScaleBehavior);
 
         this.controlButton.text = "Stop manipulating";
         this.controlButton.onPointerDownObservable.clear();
@@ -107,10 +120,6 @@ class ManipulatorView extends Croquet.View {
     #addManipulateHologramNearMenu(){
         this.GUIManager.useRealisticScaling = true;
 
-        const buttonParams = [
-            { name: "Start Manipulating", imageUrl: "../img/iconAdjust.png" }
-        ]
-
         this.manipulatorNearMenu = new BABYLON.GUI.NearMenu("NearMenu");
         this.manipulatorNearMenu.rows = 1;
         this.GUIManager.addControl( this.manipulatorNearMenu);
@@ -120,6 +129,9 @@ class ManipulatorView extends Croquet.View {
         this.controlButton = new BABYLON.GUI.TouchHolographicButton();
         this.#setupDefaultControlButtonBehavior()
         this.manipulatorNearMenu.addButton(this.controlButton);
+
+        this.nearMenuIsPresent = true;
+        this.publish("view", "nearMenuAdded");
 
     }
 
