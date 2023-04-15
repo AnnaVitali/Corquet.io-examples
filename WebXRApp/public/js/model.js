@@ -5,6 +5,7 @@ class RootModel extends Croquet.Model {
     init() {
         this.linkedViews = [];
         this.isUserManipulating = false;
+        this.viewInControl = null;
 
         this.subscribe(this.sessionId, "view-join", this.viewJoin);
         this.subscribe(this.sessionId, "view-exit", this.viewDrop)
@@ -45,14 +46,16 @@ class RootModel extends Croquet.Model {
     viewDrop(viewId){
         console.log("MODEL: received view left");
         this.linkedViews.splice(this.linkedViews.indexOf(viewId),1);
-        if(this.linkedViews.length === 0){
-            this.destroy();
+        if(this.viewInControl === viewId){
+            this.isUserManipulating = false;
+            this.linkedViews.forEach(v => this.publish(v, "showManipulatorMenu"));
         }
     }
 
     manageUserHologramControl(data){
         console.log("MODEL: received manage user hologram control");
         this.isUserManipulating = true;
+        this.viewInControl = data.view;
         this.linkedViews.filter(v => data.view !== v).forEach(v => this.publish(v, "hideManipulatorMenu"));
     }
 

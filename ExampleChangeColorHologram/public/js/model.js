@@ -23,6 +23,7 @@ class RootModel extends Croquet.Model {
     viewDrop(viewId){
         console.log("MODEL: received view left");
         this.linkedViews.splice(this.linkedViews.indexOf(viewId),1);
+        console.log(this.linkedViews);
         if(this.linkedViews.length === 0){
             this.destroy();
         }
