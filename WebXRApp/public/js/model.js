@@ -4,41 +4,62 @@ class RootModel extends Croquet.Model {
 
     init() {
         this.linkedViews = [];
+        this.isUserManipulating = false;
 
         this.subscribe(this.sessionId, "view-join", this.viewJoin);
         this.subscribe(this.sessionId, "view-exit", this.viewDrop)
         this.subscribe("colorButton", "clicked", this.changeHologramColor);
         this.subscribe("controlButton", "clicked", this.manageUserHologramControl);
+        this.subscribe("controlButton", "released", this.manageUserHologramControlReleased);
         this.subscribe("hologram", "positionChanged", this.updatePosition);
+        this.subscribe("hologram", "rotationChanged", this.updateRotation);
+        this.subscribe("hologram", "scaleChanged", this.updateScale);
 
         this.#initializeScene();
         this.#activateRenderLoop();
 
+
     }
 
     updatePosition(data){
-        const position = new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
-        const rotation = new BABYLON.Quaternion(data.rotation_x, data.rotation_y, data.rotation_z, data.rotation_w);
+        console.log("MODEL: received position changed");
+        this.sphere.position = new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
+    }
 
-        this.sphere.position = position;
-        this.sphere.rotationQuaternion = rotation;
+    updateRotation(data){
+        console.log("MODEL: received rotation changed");
+        this.sphere.rotationQuaternion = new BABYLON.Quaternion(data.rotation_x, data.rotation_y, data.rotation_z, data.rotation_w);
+    }
+
+    updateScale(data){
+        console.log("MODEL: received scale changed");
+        this.sphere.scaling = new BABYLON.Vector3(data.scale_x, data.scale_y, data.scale_z);
     }
 
     viewJoin(viewId){
         console.log("MODEL: received view join");
         this.linkedViews.push(viewId);
+        console.log("Is user manipulating " + this.isUserManipulating);
     }
 
     viewDrop(viewId){
         console.log("MODEL: received view left");
         this.linkedViews.splice(this.linkedViews.indexOf(viewId),1);
+        if(this.linkedViews.length === 0){
+            this.destroy();
+        }
     }
 
     manageUserHologramControl(data){
         console.log("MODEL: received manage user hologram control");
-        console.log("id received: " + data.view);
-        console.log(this.linkedViews);
+        this.isUserManipulating = true;
         this.linkedViews.filter(v => data.view !== v).forEach(v => this.publish(v, "hideManipulatorMenu"));
+    }
+
+    manageUserHologramControlReleased(data){
+        console.log("MODEL: received manage user hologram control");
+        this.isUserManipulating = false;
+        this.linkedViews.filter(v => data.view !== v).forEach(v => this.publish(v, "showManipulatorMenu"));
     }
 
     changeHologramColor(data){
