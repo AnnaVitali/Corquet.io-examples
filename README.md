@@ -18,6 +18,8 @@ You can find the example in the directory `ExampleChangeColorHologram`.
 
 This example shows how it is possible to enable the manipulation of the hologram thanks to the elements made available by BABYLON.js and how to propagate the changes to other connected users.
 
+You can find the example in the directory `WebXRApp`.
+
 ![Alt Text](img/web_xr_app.gif)
 
 **Notice**: the little latency that you see is due to the screen mirror application to project the smartphone screen on te PC. 
