@@ -2,6 +2,9 @@ const canvas = document.getElementById("renderCanvas");
 
 class RootModel extends Croquet.Model {
 
+    /**
+    * Initialize the Model.
+    * */
     init() {
         this.linkedViews = [];
 
@@ -12,14 +15,22 @@ class RootModel extends Croquet.Model {
         this.#initializeScene();
         this.#activateRenderLoop();
 
-
     }
+
+    /**
+     * Handle a new connected view.
+     * @param {any} viewId the id of the new view connected.
+     */
     viewJoin(viewId){
         console.log("MODEL: received view join");
         this.linkedViews.push(viewId);
         console.log("Is user manipulating " + this.isUserManipulating);
     }
 
+    /**
+     * Handle the view left event.
+     * @param {any} viewId the id of the outgoing view.
+     */
     viewDrop(viewId){
         console.log("MODEL: received view left");
         this.linkedViews.splice(this.linkedViews.indexOf(viewId),1);
@@ -29,6 +40,10 @@ class RootModel extends Croquet.Model {
         }
     }
 
+    /**
+     * Change the color of the hologram.
+     * @param {any} data object containing the color to apply.
+     */
     changeHologramColor(data){
         console.log("MODEL: receive color button clicked");
         this.sphere.material.diffuseColor = this.#computeColor(data.color);

@@ -1,5 +1,9 @@
 class RootView extends Croquet.View {
 
+    /**
+    * Constructor for the class.
+    * @param {any} model the model of reference
+    */
     constructor(model) {
         super(model);
         this.model = model;
@@ -8,7 +12,10 @@ class RootView extends Croquet.View {
         this.#addChangeColorMenu();
     }
 
-
+    /**
+   * Notify that the colored button has been clicked.
+   * @param {any} colorName name of the button clicked.
+   */
     notifyColorButtonClicked(colorName){
         console.log("VIEW: color button clicked");
         this.publish("colorButton", "clicked", {color: colorName});

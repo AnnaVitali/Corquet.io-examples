@@ -1,5 +1,9 @@
 class RootView extends Croquet.View {
 
+    /**
+     * Constructor for the class.
+     * @param {any} model the model of reference
+     */
     constructor(model) {
         super(model);
         this.model = model;
@@ -15,21 +19,34 @@ class RootView extends Croquet.View {
         }
     }
 
+    /**
+     * Hide the manipulator menu.
+     * */
     hideManipulatorMenu(){
         console.log("VIEW: received hide manipulator menu");
         this.manipulatorNearMenu.dispose();
     }
 
+    /**
+     * Notify that the colored button has been clicked.
+     * @param {any} colorName name of the button clicked.
+     */
     notifyColorButtonClicked(colorName){
         console.log("VIEW: color button clicked");
         this.publish("colorButton", "clicked", {color: colorName});
     }
 
+    /**
+     * Notify that the current user has started manipulating the hologram.
+     * */
     notifyUserStartManipulating(){
         console.log("VIEW: user start manipulating");
         this.publish("controlButton", "clicked", {view: this.viewId});
     }
 
+    /**
+     * Notify that the current user has finish to manipulate the hologram.
+     * */
     notifyCurrentUserReleaseControl(){
         console.log("VIEW: user stop manipulating");
         this.#setDefaultControlButtonBehavior();
@@ -37,6 +54,10 @@ class RootView extends Croquet.View {
         this.publish("controlButton", "released", {view: this.viewId});
     }
 
+    /**
+     * Notify that the positon of the hologram has been changed.
+     * @param {BABYLON.Vector3} position the new position.
+     */
     notifyHologramPositionChanged(position){
         console.log("VIEW: hologram position change");
         this.publish("hologram", "positionChanged",
@@ -47,6 +68,10 @@ class RootView extends Croquet.View {
             });
     }
 
+    /**
+     * Notify that the rotation of the hologram has been changed.
+     * @param {BABYLON.Quaternion} rotation the new rotation.
+     */
     notifyHologramRotationChanged(rotation){
         console.log("VIEW: hologram rotation change");
         this.publish("hologram", "rotationChanged",
@@ -58,6 +83,10 @@ class RootView extends Croquet.View {
             });
     }
 
+    /**
+     * Notify that the scale of the hologram has been changed.
+     * @param {BABYLON.Vector3} scale the new scale.
+     */
     notifyHologramScaleChanged(scale){
         console.log("VIEW: hologram scale change");
         this.publish("hologram", "scaleChanged",
@@ -66,6 +95,21 @@ class RootView extends Croquet.View {
                 scale_y: scale.y,
                 scale_z: scale.z
             });
+    }
+
+    /**
+     * Add the menu that allow the user to manipulate the hologram.
+     * */
+    addManipulatorMenu() {
+        this.manipulatorNearMenu = new BABYLON.GUI.NearMenu("NearMenu");
+        this.manipulatorNearMenu.rows = 1;
+        this.model.GUIManager.addControl(this.manipulatorNearMenu);
+        this.manipulatorNearMenu.isPinned = true;
+        this.manipulatorNearMenu.position = new BABYLON.Vector3(+0.2, 1.2, 0.5);
+
+        this.controlButton = new BABYLON.GUI.TouchHolographicButton();
+        this.#setDefaultControlButtonBehavior()
+        this.manipulatorNearMenu.addButton(this.controlButton);
     }
 
     #addChangeColorMenu(){
@@ -93,18 +137,6 @@ class RootView extends Croquet.View {
 
             nearMenu.addButton(button);
         })
-    }
-
-    addManipulatorMenu(){
-        this.manipulatorNearMenu = new BABYLON.GUI.NearMenu("NearMenu");
-        this.manipulatorNearMenu.rows = 1;
-        this.model.GUIManager.addControl( this.manipulatorNearMenu);
-        this.manipulatorNearMenu.isPinned = true;
-        this.manipulatorNearMenu.position = new BABYLON.Vector3(+0.2, 1.2, 0.5);
-
-        this.controlButton = new BABYLON.GUI.TouchHolographicButton();
-        this.#setDefaultControlButtonBehavior()
-        this.manipulatorNearMenu.addButton(this.controlButton);
     }
 
     #removeElementHologramManipulator() {

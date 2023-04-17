@@ -2,6 +2,9 @@ const canvas = document.getElementById("renderCanvas");
 
 class RootModel extends Croquet.Model {
 
+    /**
+     * Initialize the Model.
+     * */
     init() {
         this.linkedViews = [];
         this.isUserManipulating = false;
@@ -19,30 +22,49 @@ class RootModel extends Croquet.Model {
         this.#initializeScene();
         this.#activateRenderLoop();
 
-
     }
 
+    /**
+     * Update hologram position.
+     * @param {any} data object containing the position information.
+     */
     updatePosition(data){
         console.log("MODEL: received position changed");
         this.sphere.position = new BABYLON.Vector3(data.position_x, data.position_y, data.position_z);
     }
 
+    /**
+     * Update hologram rotation.
+     * @param {any} data object containing the rotation information.
+     */
     updateRotation(data){
         console.log("MODEL: received rotation changed");
         this.sphere.rotationQuaternion = new BABYLON.Quaternion(data.rotation_x, data.rotation_y, data.rotation_z, data.rotation_w);
     }
 
+    /**
+     * Update hologram scale.
+     * @param {any} data object containing the scale infromation.
+     */
     updateScale(data){
         console.log("MODEL: received scale changed");
         this.sphere.scaling = new BABYLON.Vector3(data.scale_x, data.scale_y, data.scale_z);
     }
 
+    /**
+     * Handle a new connected view.
+     * @param {any} viewId the id of the new view connected.
+     */
     viewJoin(viewId){
         console.log("MODEL: received view join");
         this.linkedViews.push(viewId);
         console.log("Is user manipulating " + this.isUserManipulating);
     }
 
+    /**
+     * Handle the view left event.
+     * @param {any} viewId the id of the outgoing view.
+     */
     viewDrop(viewId){
         console.log("MODEL: received view left");
         this.linkedViews.splice(this.linkedViews.indexOf(viewId),1);
@@ -52,6 +74,10 @@ class RootModel extends Croquet.Model {
         }
     }
 
+    /**
+     * Manage the control of the hologram from the user.
+     * @param {any} data object that contains the id of the view in control.
+     */
     manageUserHologramControl(data){
         console.log("MODEL: received manage user hologram control");
         this.isUserManipulating = true;
@@ -59,12 +85,20 @@ class RootModel extends Croquet.Model {
         this.linkedViews.filter(v => data.view !== v).forEach(v => this.publish(v, "hideManipulatorMenu"));
     }
 
+    /**
+     * Manage the relase of the control from the user who had it.
+     * @param {any} data object that contains the id of the view where the user released the control.
+     */
     manageUserHologramControlReleased(data){
         console.log("MODEL: received manage user hologram control");
         this.isUserManipulating = false;
         this.linkedViews.filter(v => data.view !== v).forEach(v => this.publish(v, "showManipulatorMenu"));
     }
 
+    /**
+     * Change the color of the hologram.
+     * @param {any} data object containing the color to apply.
+     */
     changeHologramColor(data){
         console.log("MODEL: receive color button clicked");
         this.sphere.material.diffuseColor = this.#computeColor(data.color);
