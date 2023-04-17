@@ -12,7 +12,11 @@ You can find the example in the directory `ExampleChangeColorHologram`.
 
 ![Alt Text](img/change_color.gif)
 
+<<<<<<< HEAD
 **Notice**: the little latency that you see is due to the screen mirroring application to project the smartphone screen on te PC. 
+=======
+**Notice**: the little latency that you see is due to the screen mirror application to project the smartphone screen on te PC. 
+>>>>>>> develop
 
 ## Manipulate Hologram example
 
@@ -22,7 +26,11 @@ You can find the example in the directory `WebXRApp`.
 
 ![Alt Text](img/web_xr_app.gif)
 
+<<<<<<< HEAD
 **Notice**: the little latency that you see is due to the screen mirroring application to project the smartphone screen on te PC. 
+=======
+**Notice**: the little latency that you see is due to the screen mirror application to project the smartphone screen on te PC. 
+>>>>>>> develop
 
 ## How to run the examples
 
