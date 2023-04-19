@@ -21,7 +21,6 @@ class RootModel extends Croquet.Model {
 
         this.#initializeScene();
         this.#activateRenderLoop();
-
     }
 
     /**
@@ -181,7 +180,6 @@ class RootModel extends Croquet.Model {
 
         try {
             xrHelper.baseExperience.featuresManager.enableFeature(BABYLON.WebXRFeatureName.HAND_TRACKING, "latest", { xrInput: xr.input });
-            xrHelper.baseExperience.camera.position = new BABYLON.Vector3(0, 0, -0.3);
         } catch (err) {
             console.log("Articulated hand tracking not supported in this browser.");
         }
