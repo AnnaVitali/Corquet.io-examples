@@ -104,10 +104,10 @@ dist
 .tern-port
 
 #Visual Studio
-*.vs/*
+*.vs
 
 #Jet Brains
-*.idea/*
+*.idea
 
 #https certificate
 *.pem
